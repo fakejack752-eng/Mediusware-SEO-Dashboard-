@@ -1,16 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Database, Loader2 } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, Database, Loader2, Search, X,
+  ChevronDown, ArrowUpDown, Filter,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -18,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Table,
@@ -41,6 +44,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getModuleConfig, type FieldConfig } from "@/lib/module-config";
+import { getStatusColor, getPriorityColor } from "@/components/dashboard/tab-helpers";
+import { cn } from "@/lib/utils";
 
 interface AdminPanelProps {
   moduleId: string;
@@ -56,6 +61,28 @@ function formatCellValue(value: unknown, field: FieldConfig): string {
   return String(value);
 }
 
+function getBadgeVariant(field: FieldConfig, value: string): { className: string; text: string } | null {
+  if (field.type === "boolean") {
+    return {
+      className: value === "Yes" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" : "bg-stone-100 text-stone-500 dark:bg-stone-800/40 dark:text-stone-400 border-stone-200 dark:border-stone-700",
+      text: value,
+    };
+  }
+  if (field.type === "select") {
+    const statusKeys = ["status", "sentiment", "searchVolumeTrend", "signalType", "demand"];
+    if (statusKeys.some(k => field.key.includes(k)) || field.key === "status") {
+      const cls = field.key === "priority" || field.key === "demand"
+        ? getPriorityColor(value)
+        : getStatusColor(value);
+      if (cls !== "bg-muted text-muted-foreground") {
+        return { className: cls, text: value };
+      }
+    }
+    return { className: "bg-muted/80 text-muted-foreground border-transparent", text: value };
+  }
+  return null;
+}
+
 export function AdminPanel({ moduleId }: AdminPanelProps) {
   const config = getModuleConfig(moduleId);
   const [data, setData] = useState<Record<string, unknown>[]>([]);
@@ -64,6 +91,9 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
   const [editId, setEditId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Record<string, unknown>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<string>("id");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const fetchData = useCallback(async () => {
     if (!config) return;
@@ -80,6 +110,40 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
   }, [config]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const filteredData = useMemo(() => {
+    let result = data;
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((r) =>
+        config?.fields.some((f) =>
+          String(r[f.key] ?? "").toLowerCase().includes(q)
+        )
+      );
+    }
+    result = [...result].sort((a, b) => {
+      const aVal = a[sortField] ?? "";
+      const bVal = b[sortField] ?? "";
+      const aNum = Number(aVal);
+      const bNum = Number(bVal);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return sortDir === "asc" ? aNum - bNum : bNum - aNum;
+      }
+      return sortDir === "asc"
+        ? String(aVal).localeCompare(String(bVal))
+        : String(bVal).localeCompare(String(aVal));
+    });
+    return result;
+  }, [data, search, sortField, sortDir, config]);
+
+  const toggleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
 
   const openCreate = () => {
     setEditId(null);
@@ -105,46 +169,46 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
 
   const handleDelete = async (id: number) => {
     if (!config) return;
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
     try {
       const res = await fetch(`${config.apiEndpoint}?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Record deleted");
         fetchData();
       } else {
-        toast.error("Failed to delete record");
+        toast.error("Failed to delete");
       }
     } catch {
-      toast.error("Failed to delete record");
+      toast.error("Failed to delete");
     }
   };
 
   const handleSubmit = async () => {
     if (!config) return;
-    const requiredField = config.fields.find(f => f.required && !formData[f.key] && formData[f.key] !== 0 && formData[f.key] !== false);
+    const requiredField = config.fields.find(
+      (f) => f.required && !formData[f.key] && formData[f.key] !== 0 && formData[f.key] !== false
+    );
     if (requiredField) {
       toast.error(`${requiredField.label} is required`);
       return;
     }
     setSubmitting(true);
     try {
-      const url = editId ? config.apiEndpoint : config.apiEndpoint;
       const method = editId ? "PUT" : "POST";
       const body = editId ? { id: editId, ...formData } : formData;
-      const res = await fetch(url, {
+      const res = await fetch(config.apiEndpoint, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        toast.success(editId ? "Record updated" : "Record added");
+        toast.success(editId ? "Record updated" : "Record created");
         setDialogOpen(false);
         fetchData();
       } else {
-        toast.error("Failed to save record");
+        toast.error("Failed to save");
       }
     } catch {
-      toast.error("Failed to save record");
+      toast.error("Failed to save");
     } finally {
       setSubmitting(false);
     }
@@ -152,9 +216,7 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
 
   if (!config) {
     return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Module not found
-      </div>
+      <div className="flex items-center justify-center py-20 text-muted-foreground">Module not found</div>
     );
   }
 
@@ -162,103 +224,177 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
   const hiddenFields = config.fields.filter((f) => f.showInTable === false || config.fields.indexOf(f) >= 10);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+      >
         <div>
           <h2 className="text-xl font-bold tracking-tight">{config.label}</h2>
-          <p className="text-sm text-muted-foreground">{config.description}</p>
+          <p className="text-sm text-muted-foreground mt-0.5">{config.description}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="tabular-nums">
-            {data.length} records
-          </Badge>
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Badge variant="secondary" className="tabular-nums px-3 py-1">
+              {data.length} records
+            </Badge>
+          </motion.div>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
             <Plus className="h-4 w-4" />
-            Add Record
+            <span className="hidden sm:inline">Add Record</span>
           </Button>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Search & Filters */}
+      {data.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="flex items-center gap-3"
+        >
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search records..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-md flex items-center justify-center hover:bg-muted"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          {search && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs text-muted-foreground"
+            >
+              {filteredData.length} of {data.length} shown
+            </motion.p>
+          )}
+        </motion.div>
+      )}
 
       {/* Content */}
       {loading ? (
-        <Card>
-          <CardContent className="p-4 space-y-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full" />
-            ))}
-          </CardContent>
-        </Card>
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-11 w-full rounded-lg" />
+          ))}
+        </div>
       ) : data.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center py-20 text-center"
+          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="flex flex-col items-center justify-center py-24 text-center"
         >
-          <div className="h-16 w-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-            <Database className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-semibold mb-1">No records yet</h3>
-          <p className="text-sm text-muted-foreground mb-4 max-w-sm">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
+            className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mb-4"
+          >
+            <Database className="h-6 w-6 text-muted-foreground" />
+          </motion.div>
+          <h3 className="text-base font-semibold mb-1">No records yet</h3>
+          <p className="text-sm text-muted-foreground mb-5 max-w-sm">
             Add your first {config.label.toLowerCase()} record to start tracking data.
           </p>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
             <Plus className="h-4 w-4" />
-            Add Record
+            Add First Record
           </Button>
         </motion.div>
       ) : (
-        <Card>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="rounded-xl border bg-card overflow-hidden"
+        >
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="hover:bg-transparent">
                   {visibleFields.map((f) => (
-                    <TableHead key={f.key} className={f.tableWidth}>
-                      {f.label}
+                    <TableHead
+                      key={f.key}
+                      className={`${f.tableWidth} cursor-pointer select-none group/head`}
+                      onClick={() => toggleSort(f.key)}
+                    >
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] uppercase tracking-wider font-semibold">{f.label}</span>
+                        <ArrowUpDown className={cn(
+                          "h-3 w-3 opacity-0 group-hover/head:opacity-40 transition-opacity",
+                          sortField === f.key && "opacity-100 !text-foreground"
+                        )} />
+                      </div>
                     </TableHead>
                   ))}
-                  {hiddenFields.length > 0 && (
-                    <TableHead className="w-10">More</TableHead>
-                  )}
-                  <TableHead className="w-24 text-right">Actions</TableHead>
+                  {hiddenFields.length > 0 && <TableHead className="w-10" />}
+                  <TableHead className="w-24 text-right">
+                    <span className="text-[11px] uppercase tracking-wider font-semibold">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <AnimatePresence>
-                  {data.map((record, idx) => (
+                <AnimatePresence mode="popLayout">
+                  {filteredData.map((record, idx) => (
                     <motion.tr
                       key={record.id as number}
+                      layout
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.02, duration: 0.2 }}
-                      className="border-b transition-colors hover:bg-muted/50"
+                      exit={{ opacity: 0, x: 8, height: 0 }}
+                      transition={{ delay: idx * 0.02, duration: 0.25 }}
+                      className="border-b transition-colors hover:bg-muted/40 group/row"
                     >
-                      {visibleFields.map((f) => (
-                        <TableCell key={f.key} className="tabular-nums">
-                          {f.type === "select" || f.type === "boolean" ? (
-                            <Badge variant="outline" className="text-xs whitespace-nowrap">
-                              {formatCellValue(record[f.key], f)}
-                            </Badge>
-                          ) : (
-                            <span className="text-sm truncate block max-w-[200px]">
-                              {formatCellValue(record[f.key], f)}
-                            </span>
-                          )}
-                        </TableCell>
-                      ))}
+                      {visibleFields.map((f) => {
+                        const badge = getBadgeVariant(f, formatCellValue(record[f.key], f));
+                        return (
+                          <TableCell key={f.key} className="tabular-nums py-3">
+                            {badge ? (
+                              <span className={cn("inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium border", badge.className)}>
+                                {badge.text}
+                              </span>
+                            ) : (
+                              <span className="text-sm truncate block max-w-[200px]">
+                                {formatCellValue(record[f.key], f)}
+                              </span>
+                            )}
+                          </TableCell>
+                        );
+                      })}
                       {hiddenFields.length > 0 && (
                         <TableCell>
-                          <TooltipProvider>
+                          <TooltipProvider delayDuration={200}>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="text-xs text-muted-foreground cursor-default">+{hiddenFields.length}</span>
+                                <Badge variant="outline" className="text-[10px] cursor-default hover:bg-muted">
+                                  +{hiddenFields.length}
+                                </Badge>
                               </TooltipTrigger>
                               <TooltipContent side="left" className="max-w-xs">
-                                <div className="space-y-1">
+                                <div className="space-y-1.5">
                                   {hiddenFields.map((f) => (
-                                    <div key={f.key} className="flex justify-between gap-4 text-xs">
-                                      <span className="text-muted-foreground">{f.label}:</span>
+                                    <div key={f.key} className="flex justify-between gap-6 text-xs">
+                                      <span className="text-muted-foreground">{f.label}</span>
                                       <span className="font-medium tabular-nums">{formatCellValue(record[f.key], f)}</span>
                                     </div>
                                   ))}
@@ -268,8 +404,8 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
                           </TooltipProvider>
                         </TableCell>
                       )}
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
+                      <TableCell className="text-right py-3">
+                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity duration-200">
                           <Button
                             variant="ghost"
                             size="icon"
@@ -281,7 +417,7 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                             onClick={() => handleDelete(record.id as number)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -294,31 +430,35 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
               </TableBody>
             </Table>
           </div>
-        </Card>
+        </motion.div>
       )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editId ? "Edit Record" : "Add Record"}</DialogTitle>
+            <DialogTitle className="text-lg">{editId ? "Edit Record" : "New Record"}</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {config.label} — {editId ? "Update the fields below" : "Fill in the details to create a new entry"}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
-            {config.fields.map((field) => (
-              <div
+            {config.fields.map((field, fieldIdx) => (
+              <motion.div
                 key={field.key}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: fieldIdx * 0.03, duration: 0.25 }}
                 className={field.type === "textarea" ? "sm:col-span-2" : ""}
               >
-                <Label htmlFor={field.key} className="text-sm mb-1.5 block">
+                <Label htmlFor={field.key} className="text-xs font-medium mb-1.5 block text-muted-foreground uppercase tracking-wider">
                   {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                  {field.required && <span className="text-red-500 ml-0.5">*</span>}
                 </Label>
                 {field.type === "select" && field.options && (
                   <Select
                     value={String(formData[field.key] ?? "")}
-                    onValueChange={(v) =>
-                      setFormData((p) => ({ ...p, [field.key]: v }))
-                    }
+                    onValueChange={(v) => setFormData((p) => ({ ...p, [field.key]: v }))}
                   >
                     <SelectTrigger className={field.width}>
                       <SelectValue placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`} />
@@ -333,13 +473,11 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
                   </Select>
                 )}
                 {field.type === "boolean" && (
-                  <div className="flex items-center gap-2 h-9">
+                  <div className="flex items-center gap-2.5 h-9">
                     <Switch
                       id={field.key}
                       checked={!!formData[field.key]}
-                      onCheckedChange={(v) =>
-                        setFormData((p) => ({ ...p, [field.key]: v }))
-                      }
+                      onCheckedChange={(v) => setFormData((p) => ({ ...p, [field.key]: v }))}
                     />
                     <span className="text-sm text-muted-foreground">
                       {formData[field.key] ? "Yes" : "No"}
@@ -351,10 +489,9 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
                     id={field.key}
                     placeholder={field.placeholder}
                     value={String(formData[field.key] ?? "")}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, [field.key]: e.target.value }))
-                    }
+                    onChange={(e) => setFormData((p) => ({ ...p, [field.key]: e.target.value }))}
                     rows={3}
+                    className="text-sm"
                   />
                 )}
                 {field.type === "number" && (
@@ -379,21 +516,19 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
                     type={field.type}
                     placeholder={field.placeholder}
                     value={String(formData[field.key] ?? "")}
-                    onChange={(e) =>
-                      setFormData((p) => ({ ...p, [field.key]: e.target.value }))
-                    }
+                    onChange={(e) => setFormData((p) => ({ ...p, [field.key]: e.target.value }))}
                     className={field.width}
                   />
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="text-sm">
               Cancel
             </Button>
-            <Button onClick={handleSubmit} disabled={submitting} className="gap-1.5">
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Button onClick={handleSubmit} disabled={submitting} className="gap-1.5 text-sm">
+              {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {editId ? "Update" : "Create"}
             </Button>
           </DialogFooter>
@@ -402,3 +537,4 @@ export function AdminPanel({ moduleId }: AdminPanelProps) {
     </div>
   );
 }
+
