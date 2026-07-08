@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db, ensureDb } from "@/lib/db";
 
 export async function GET() {
   try {
+    await ensureDb(db);
     const records = await db.marketIntel.findMany({ orderBy: { id: "desc" } });
     return NextResponse.json(records);
   } catch (error) {
@@ -13,6 +14,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureDb(db);
     const body = await request.json();
     const record = await db.marketIntel.create({ data: body });
     return NextResponse.json(record, { status: 201 });
@@ -24,6 +26,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    await ensureDb(db);
     const { id, ...data } = await request.json();
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
     const record = await db.marketIntel.update({ where: { id }, data });
@@ -36,6 +39,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    await ensureDb(db);
     const { searchParams } = new URL(request.url);
     const id = parseInt(searchParams.get("id") || "0");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
