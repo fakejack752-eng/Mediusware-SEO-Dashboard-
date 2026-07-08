@@ -47,6 +47,7 @@ local-*
 
 # logs
 *.log
+dev.log
 
 # database
 db/*.db
