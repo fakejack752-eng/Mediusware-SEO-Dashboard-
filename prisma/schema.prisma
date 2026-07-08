@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,187 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ═══════════════════════════════════════════════════════
+// 1 — Market Intelligence
+// Fields: Date, Source Platform, Topic/Theme, Signal Type,
+//         Search Volume Trend, Sentiment, Geography, Audience
+//         Segment, Key Insight, Relevance Score, Suggested
+//         Action, Linked Module, Owner
+// ═══════════════════════════════════════════════════════
+model MarketIntel {
+  id                Int    @id @default(autoincrement())
+  date              String
+  sourcePlatform    String
+  topicTheme        String
+  signalType        String
+  searchVolumeTrend String
+  sentiment         String
+  geography         String  @default("")
+  audienceSegment   String  @default("")
+  keyInsight        String  @default("")
+  relevanceScore    Int     @default(0)
+  suggestedAction   String  @default("")
+  linkedModule      String  @default("")
+  owner             String  @default("")
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ═══════════════════════════════════════════════════════
+// 2 — Competitor Intelligence
+// Fields: Competitor, Domain, Page URL, Content Type,
+//         Target Keyword, Publish Date, Word Count, Est. DA,
+//         Referring Domains, Est. Traffic, Content Gap,
+//         Priority, Confidence Notes
+// ═══════════════════════════════════════════════════════
+model CompetitorIntel {
+  id               Int    @id @default(autoincrement())
+  competitor       String
+  domain           String  @default("")
+  pageUrl          String  @default("")
+  contentType      String  @default("")
+  targetKeyword    String  @default("")
+  publishDate      String  @default("")
+  wordCount        Int     @default(0)
+  estDa            Int     @default(0)
+  referringDomains Int     @default(0)
+  estTraffic       Int     @default(0)
+  contentGap       String  @default("")
+  priority         String  @default("Medium")
+  confidenceNotes  String  @default("")
+}
+
+// ═══════════════════════════════════════════════════════
+// 3 — Keyword Intelligence
+// Fields: Keyword, Cluster, Volume, KD, CPC, Intent,
+//         SERP Features, Priority Score, Target Page,
+//         Current Rank, Status, Data Source, Last Refreshed
+// ═══════════════════════════════════════════════════════
+model KeywordIntel {
+  id             Int    @id @default(autoincrement())
+  keyword        String
+  cluster        String  @default("")
+  volume         Int     @default(0)
+  kd             Int     @default(0)
+  cpc            Float   @default(0)
+  intent         String  @default("Informational")
+  serpFeatures   String  @default("")
+  priorityScore  Int     @default(0)
+  targetPage     String  @default("")
+  currentRank    Int     @default(0)
+  status         String  @default("Not Started")
+  dataSource     String  @default("")
+  lastRefreshed  String  @default("")
+}
+
+// ═══════════════════════════════════════════════════════
+// 4 — SERP Analysis
+// Fields: Keyword, Rank, Ranking URL/Domain, Content Type,
+//         Word Count, Est. DA, Featured Snippet Y/N,
+//         Missing Subtopics, Format Opportunity, Our Rank,
+//         Action, Last Checked
+// ═══════════════════════════════════════════════════════
+model SerpAnalysis {
+  id                Int     @id @default(autoincrement())
+  keyword           String
+  rank              Int     @default(0)
+  rankingUrlDomain  String  @default("")
+  contentType       String  @default("")
+  wordCount         Int     @default(0)
+  estDa             Int     @default(0)
+  featuredSnippet   Boolean @default(false)
+  missingSubtopics  String  @default("")
+  formatOpportunity String  @default("")
+  ourRank           Int     @default(0)
+  action            String  @default("")
+  lastChecked       String  @default("")
+}
+
+// ═══════════════════════════════════════════════════════
+// 5 — AI Search Audit
+// Fields: Query, AI Platform, Brand Mentioned Y/N,
+//         Position, Cited URL, Competitor Mentioned,
+//         Sentiment, Answer Summary, Gap, Fix, Owner,
+//         Last Checked
+// ═══════════════════════════════════════════════════════
+model AiSearchAudit {
+  id                   Int     @id @default(autoincrement())
+  query                String
+  aiPlatform           String
+  brandMentioned       Boolean @default(false)
+  position             Int     @default(0)
+  citedUrl             String  @default("")
+  competitorMentioned  String  @default("")
+  sentiment            String  @default("Neutral")
+  answerSummary        String  @default("")
+  gap                  String  @default("")
+  fix                  String  @default("")
+  owner                String  @default("")
+  lastChecked          String  @default("")
+}
+
+// ═══════════════════════════════════════════════════════
+// 6 — Content Pipeline
+// Fields: Title, Cluster, Target Keyword, Content Type,
+//         Writer, Status, Priority, Due/Publish Date,
+//         Word Count Target, SEO Checklist, Live URL, Notes
+// ═══════════════════════════════════════════════════════
+model ContentPipeline {
+  id              Int    @id @default(autoincrement())
+  title           String
+  cluster         String  @default("")
+  targetKeyword   String  @default("")
+  contentType     String  @default("")
+  writer          String  @default("")
+  status          String  @default("Idea")
+  priority        String  @default("Medium")
+  duePublishDate  String  @default("")
+  wordCountTarget Int     @default(0)
+  seoChecklist    String  @default("")
+  liveUrl         String  @default("")
+  notes           String  @default("")
+}
+
+// ═══════════════════════════════════════════════════════
+// 7 — Performance Dashboard
+// Fields: Page, Keyword, Rank, Rank Change, Impressions,
+//         Clicks, CTR, Time on Page, Leads, Conversions,
+//         Conversion Rate, Traffic Source, Week Of
+// ═══════════════════════════════════════════════════════
+model PerformanceDash {
+  id             Int    @id @default(autoincrement())
+  page           String
+  keyword        String  @default("")
+  rank           Int     @default(0)
+  rankChange     Int     @default(0)
+  impressions    Int     @default(0)
+  clicks         Int     @default(0)
+  ctr            Float   @default(0)
+  timeOnPage     Float   @default(0)
+  leads          Int     @default(0)
+  conversions    Int     @default(0)
+  conversionRate Float   @default(0)
+  trafficSource  String  @default("")
+  weekOf         String
+}
+
+// ═══════════════════════════════════════════════════════
+// 8 — Content Gap Tracker
+// Fields: Cluster, Missing Subtopic, Service Line
+//         Supported Y/N, Competitor Coverage Y/N, Demand,
+//         Priority, Suggested Type, Owner/Team, Assigned,
+//         Status, Target Quarter, Notes
+// ═══════════════════════════════════════════════════════
+model ContentGapTracker {
+  id                    Int     @id @default(autoincrement())
+  cluster               String
+  missingSubtopic       String
+  serviceLineSupported  Boolean @default(false)
+  competitorCoverage    Boolean @default(false)
+  demand                String  @default("Medium")
+  priority              String  @default("Medium")
+  suggestedType         String  @default("")
+  ownerTeam             String  @default("")
+  assigned              String  @default("")
+  status                String  @default("Not Started")
+  targetQuarter         String  @default("")
+  notes                 String  @default("")
 }
