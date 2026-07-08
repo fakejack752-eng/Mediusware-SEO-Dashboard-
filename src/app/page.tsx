@@ -11,6 +11,7 @@ import { AiSearchAudit } from "@/components/dashboard/ai-search-audit";
 import { ContentPipeline } from "@/components/dashboard/content-pipeline";
 import { PerformanceDashboard } from "@/components/dashboard/performance-dashboard";
 import { ContentGapTracker } from "@/components/dashboard/content-gap-tracker";
+import { SeoChatbot } from "@/components/dashboard/seo-chatbot";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   TrendingUp,
@@ -147,6 +148,8 @@ export default function Home() {
           </p>
         </div>
       </footer>
+
+      <SeoChatbot />
     </div>
   );
 }
