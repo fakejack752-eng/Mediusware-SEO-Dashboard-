@@ -26,9 +26,6 @@ import {
   EmptyState,
   LoadingSkeleton,
   COLORS,
-  EMERALD,
-  TEAL,
-  EMBER,
   countBy,
   avgNum,
   fadeInUp,
@@ -39,13 +36,13 @@ import {
   staggerContainer,
 } from "@/components/dashboard/tab-helpers";
 
-const accentCycle = ["emerald", "teal", "amber", "stone"] as const;
+const accentCycle = ["teal", "blue", "green", "amber"] as const;
 
 const sentimentColors: Record<string, string> = {
-  Positive: "#059669",
+  Positive: "#00CC99",
   Negative: "#dc2626",
   Neutral: "#78716c",
-  Mixed: "#d97706",
+  Mixed: "#00A99D",
 };
 
 export function MarketIntelTab() {
@@ -72,14 +69,14 @@ export function MarketIntelTab() {
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
   const sourceConfig: ChartConfig = {
-    value: { label: "Signals", color: EMERALD },
+    value: { label: "Signals", color: "#00A99D" },
   };
 
   const sentimentConfig: ChartConfig = {
-    Positive: { label: "Positive", color: "#059669" },
+    Positive: { label: "Positive", color: "#00CC99" },
     Negative: { label: "Negative", color: "#dc2626" },
     Neutral: { label: "Neutral", color: "#78716c" },
-    Mixed: { label: "Mixed", color: "#d97706" },
+    Mixed: { label: "Mixed", color: "#00A99D" },
   };
 
   if (loading) return <LoadingSkeleton />;

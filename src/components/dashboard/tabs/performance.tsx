@@ -56,10 +56,10 @@ export function PerformanceTab() {
 
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
-  const sourceConfig: ChartConfig = { clicks: { label: "Clicks", color: "#059669" } };
+  const sourceConfig: ChartConfig = { clicks: { label: "Clicks", color: "#00A99D" } };
   const trendConfig: ChartConfig = {
     avgRank: { label: "Avg Rank", color: "#d97706" },
-    clicks: { label: "Clicks", color: "#059669" },
+    clicks: { label: "Clicks", color: "#00A99D" },
   };
 
   if (loading) return <LoadingSkeleton />;
@@ -70,11 +70,11 @@ export function PerformanceTab() {
       {/* ── KPI Grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {[
-          { title: "Total Pages", value: kpis.totalPages, icon: FileText, accentColor: "emerald" as const },
-          { title: "Total Clicks", value: kpis.totalClicks.toLocaleString(), icon: TrendingUp, accentColor: "teal" as const },
-          { title: "Avg CTR", value: kpis.avgCtr, suffix: "%", icon: Target, accentColor: "amber" as const },
-          { title: "Total Leads", value: kpis.totalLeads.toLocaleString(), icon: Users, accentColor: "stone" as const },
-          { title: "Conversions", value: kpis.totalConversions.toLocaleString(), icon: CheckCircle, accentColor: "emerald" as const },
+          { title: "Total Pages", value: kpis.totalPages, icon: FileText, accentColor: "teal" as const },
+          { title: "Total Clicks", value: kpis.totalClicks.toLocaleString(), icon: TrendingUp, accentColor: "blue" as const },
+          { title: "Avg CTR", value: kpis.avgCtr, suffix: "%", icon: Target, accentColor: "green" as const },
+          { title: "Total Leads", value: kpis.totalLeads.toLocaleString(), icon: Users, accentColor: "amber" as const },
+          { title: "Conversions", value: kpis.totalConversions.toLocaleString(), icon: CheckCircle, accentColor: "teal" as const },
         ].map((kpi, i) => (
           <motion.div key={kpi.title} variants={fadeInUp} custom={i} initial="hidden" animate="visible">
             <KpiCard

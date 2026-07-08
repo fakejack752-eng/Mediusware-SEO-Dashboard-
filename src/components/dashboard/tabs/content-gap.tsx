@@ -25,7 +25,7 @@ import {
 const PRIORITY_CELL_COLORS: Record<string, string> = {
   Critical: "#dc2626",
   High: "#d97706",
-  Medium: "#0d9488",
+  Medium: "#00A99D",
   Low: "#78716c",
 };
 
@@ -65,7 +65,7 @@ export function ContentGapTab() {
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
   const clusterConfig: ChartConfig = {
-    value: { label: "Gaps", color: "#059669" },
+    value: { label: "Gaps", color: "#00A99D" },
   };
   const priorityConfig: ChartConfig = {
     value: { label: "Count", color: EMBER },
@@ -83,7 +83,7 @@ export function ContentGapTab() {
             title="Total Gaps"
             value={kpis.total}
             icon={Target}
-            accentColor="emerald"
+            accentColor="teal"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={1}>
@@ -92,7 +92,7 @@ export function ContentGapTab() {
             value={kpis.serviceLinePct}
             suffix="%"
             icon={CheckCircle}
-            accentColor="teal"
+            accentColor="blue"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={2}>
@@ -101,7 +101,7 @@ export function ContentGapTab() {
             value={kpis.competitorCovPct}
             suffix="%"
             icon={Globe}
-            accentColor="amber"
+            accentColor="green"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={3}>
@@ -109,7 +109,7 @@ export function ContentGapTab() {
             title="High Priority"
             value={kpis.highPriority}
             icon={AlertTriangle}
-            accentColor="stone"
+            accentColor="amber"
           />
         </motion.div>
       </div>

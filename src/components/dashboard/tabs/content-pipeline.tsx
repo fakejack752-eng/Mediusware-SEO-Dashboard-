@@ -50,7 +50,7 @@ export function ContentPipelineTab() {
   const clusterData = useMemo(() => countBy(data, "cluster").slice(0, 10), [data]);
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
-  const statusConfig: ChartConfig = { value: { label: "Count", color: "#059669" } };
+  const statusConfig: ChartConfig = { value: { label: "Count", color: "#00A99D" } };
   const clusterConfig: ChartConfig = { value: { label: "Items", color: TEAL } };
 
   if (loading) return <LoadingSkeleton />;
@@ -62,10 +62,10 @@ export function ContentPipelineTab() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {(
           [
-            { title: "Total Items", value: kpis.total, icon: FileText, accent: "emerald" as const },
-            { title: "Published", value: kpis.published, icon: CheckCircle, accent: "teal" as const },
-            { title: "In Progress", value: kpis.inProgress, icon: Loader, accent: "amber" as const },
-            { title: "Avg Word Count", value: kpis.avgWordCount.toLocaleString(), icon: Layers, accent: "stone" as const },
+            { title: "Total Items", value: kpis.total, icon: FileText, accent: "teal" as const },
+            { title: "Published", value: kpis.published, icon: CheckCircle, accent: "blue" as const },
+            { title: "In Progress", value: kpis.inProgress, icon: Loader, accent: "green" as const },
+            { title: "Avg Word Count", value: kpis.avgWordCount.toLocaleString(), icon: Layers, accent: "amber" as const },
           ] as const
         ).map((kpi, i) => (
           <motion.div key={kpi.title} custom={i} variants={fadeInUp} initial="hidden" animate="visible">

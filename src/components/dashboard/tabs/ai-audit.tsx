@@ -12,10 +12,10 @@ import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts";
 import { useDataFetch, EmptyState, LoadingSkeleton, fadeInUp, AnimatedCard, AnimatedRow, getStatusColor } from "@/components/dashboard/tab-helpers";
 
 const SENTIMENT_COLORS: Record<string, string> = {
-  Positive: "#059669",
+  Positive: "#00CC99",
   Negative: "#dc2626",
   Neutral: "#78716c",
-  Mixed: "#d97706",
+  Mixed: "#00A99D",
   "Not Mentioned": "#a8a29e",
 };
 
@@ -75,14 +75,14 @@ export function AiAuditTab() {
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
   const mentionConfig: ChartConfig = {
-    value: { label: "Mention Rate %", color: "#059669" },
+    value: { label: "Mention Rate %", color: "#00A99D" },
   };
 
   const sentimentConfig: ChartConfig = {
-    Positive: { label: "Positive", color: "#059669" },
+    Positive: { label: "Positive", color: "#00CC99" },
     Negative: { label: "Negative", color: "#dc2626" },
     Neutral: { label: "Neutral", color: "#78716c" },
-    Mixed: { label: "Mixed", color: "#d97706" },
+    Mixed: { label: "Mixed", color: "#00A99D" },
     "Not Mentioned": { label: "Not Mentioned", color: "#a8a29e" },
   };
 
@@ -102,27 +102,27 @@ export function AiAuditTab() {
           title="Total Queries"
           value={kpis.total}
           icon={Brain}
-          accentColor="emerald"
+          accentColor="teal"
         />
         <KpiCard
           title="Mention Rate"
           value={kpis.mentionRate}
           suffix="%"
           icon={Target}
-          accentColor="teal"
+          accentColor="blue"
         />
         <KpiCard
           title="Avg Position"
           value={kpis.avgPosition}
           icon={BarChart3}
-          accentColor="amber"
+          accentColor="green"
         />
         <KpiCard
           title="Positive Sentiment"
           value={kpis.positivePct}
           suffix="%"
           icon={TrendingUp}
-          accentColor="stone"
+          accentColor="amber"
         />
       </motion.div>
 

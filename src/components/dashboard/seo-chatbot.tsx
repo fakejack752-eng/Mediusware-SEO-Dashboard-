@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import Image from "next/image";
 import {
   MessageSquare,
   X,
@@ -31,26 +32,22 @@ const QUICK_QUESTIONS = [
 ];
 
 function renderMarkdown(text: string): string {
-  // Escape HTML first for safety
   let html = text
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Code blocks (```lang\n...\n```)
   html = html.replace(
     /```(\w*)\n([\s\S]*?)```/g,
     (_match, _lang, code) =>
       `<pre class="bg-muted rounded-md p-3 my-2 overflow-x-auto text-xs font-mono whitespace-pre-wrap"><code>${code.trim()}</code></pre>`
   );
 
-  // Inline code (`...`)
   html = html.replace(
     /`([^`]+)`/g,
     '<code class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">$1</code>'
   );
 
-  // Headers (must be before bold/italic)
   html = html.replace(
     /^### (.+)$/gm,
     '<h3 class="font-semibold text-sm mt-3 mb-1">$1</h3>'
@@ -64,41 +61,33 @@ function renderMarkdown(text: string): string {
     '<h1 class="font-bold text-lg mt-3 mb-1">$1</h1>'
   );
 
-  // Bold (**...**)
   html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-
-  // Italic (*...*)
   html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
-  // Bullet lists (- or * at start of line)
   html = html.replace(
     /^[\-\*] (.+)$/gm,
     '<li class="ml-4 list-disc text-sm">$1</li>'
   );
 
-  // Numbered lists (1. 2. 3. at start of line)
   html = html.replace(
     /^\d+\. (.+)$/gm,
     '<li class="ml-4 list-decimal text-sm">$1</li>'
   );
 
-  // Paragraphs: double newline → paragraph break
   html = html.replace(/\n\n/g, '</p><p class="mt-2">');
-
-  // Single newline → <br/>
   html = html.replace(/\n/g, "<br/>");
 
   return `<p>${html}</p>`;
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, index }: { message: ChatMessage; index: number }) {
   const isUser = message.role === "user";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+      initial={{ opacity: 0, y: 16, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay: index * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn("flex gap-2.5", isUser ? "flex-row-reverse" : "flex-row")}
     >
       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
@@ -106,21 +95,24 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           className={cn(
             "text-[10px] font-bold",
             isUser
-              ? "bg-primary text-primary-foreground"
-              : "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+              ? "text-white"
+              : "text-white"
           )}
+          style={isUser ? { background: "#0066CC" } : { background: "linear-gradient(135deg, #00A99D, #0066CC)" }}
         >
           {isUser ? "U" : "M"}
         </AvatarFallback>
       </Avatar>
 
-      <div
+      <motion.div
+        whileHover={{ scale: 1.01 }}
         className={cn(
-          "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed",
+          "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed transition-shadow duration-300",
           isUser
-            ? "bg-primary text-primary-foreground rounded-tr-md"
+            ? "rounded-tr-md"
             : "bg-muted text-foreground rounded-tl-md"
         )}
+        style={isUser ? { background: "linear-gradient(135deg, #00A99D, #008F85)", color: "white" } : undefined}
       >
         {isUser ? (
           <p className="whitespace-pre-wrap">{message.content}</p>
@@ -133,7 +125,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         <p
           className={cn(
             "text-[10px] mt-1.5",
-            isUser ? "text-primary-foreground/60" : "text-muted-foreground"
+            isUser ? "text-white/60" : "text-muted-foreground"
           )}
         >
           {message.timestamp.toLocaleTimeString([], {
@@ -141,7 +133,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             minute: "2-digit",
           })}
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   );
 }
@@ -149,24 +141,32 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 function TypingDots() {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
       className="flex gap-2.5"
     >
       <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-        <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+        <AvatarFallback
+          className="text-[10px] font-bold text-white"
+          style={{ background: "linear-gradient(135deg, #00A99D, #0066CC)" }}
+        >
           M
         </AvatarFallback>
       </Avatar>
       <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {[0, 1, 2].map((i) => (
             <motion.span
               key={i}
-              className="h-2 w-2 rounded-full bg-muted-foreground/40"
-              animate={{ y: [0, -4, 0] }}
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: "#00A99D" }}
+              animate={{
+                y: [0, -6, 0],
+                scale: [1, 1.2, 1],
+                opacity: [0.4, 1, 0.4],
+              }}
               transition={{
-                duration: 0.6,
+                duration: 0.8,
                 repeat: Infinity,
                 delay: i * 0.15,
                 ease: "easeInOut",
@@ -197,12 +197,10 @@ export function SeoChatbot() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  // Focus input when chat opens
   useEffect(() => {
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300);
@@ -301,18 +299,27 @@ export function SeoChatbot() {
       <AnimatePresence>
         {!isOpen && (
           <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
+            initial={{ scale: 0, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0, rotate: 90 }}
             transition={{ type: "spring", stiffness: 260, damping: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 flex items-center justify-center"
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full text-white shadow-lg hover:shadow-xl transition-shadow duration-300 flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #00A99D, #0066CC)" }}
             aria-label="Open SEO Assistant"
           >
             <MessageSquare className="h-6 w-6" />
             <span className="absolute -top-1 -right-1 flex h-4 w-4">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-background" />
+              <span
+                className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                style={{ backgroundColor: "#00CC99" }}
+              />
+              <span
+                className="relative inline-flex rounded-full h-4 w-4 border-2 border-background"
+                style={{ backgroundColor: "#00CC99" }}
+              />
             </span>
           </motion.button>
         )}
@@ -322,9 +329,9 @@ export function SeoChatbot() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 30, scale: 0.9, rotateX: 10 }}
+            animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+            exit={{ opacity: 0, y: 30, scale: 0.9, rotateX: -10 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className={cn(
               "fixed z-50 bg-background border shadow-2xl rounded-2xl flex flex-col overflow-hidden",
@@ -334,18 +341,28 @@ export function SeoChatbot() {
             )}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-700 text-white px-4 py-3 flex items-center justify-between shrink-0">
+            <div
+              className="text-white px-4 py-3 flex items-center justify-between shrink-0"
+              style={{ background: "linear-gradient(135deg, #00A99D, #0066CC)" }}
+            >
               <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4" />
-                </div>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 15 }}
+                  className="h-8 w-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm"
+                >
+                  <Image src="/logo.png" alt="M" width={18} height={18} className="rounded-sm" />
+                </motion.div>
                 <div>
                   <h3 className="text-sm font-semibold leading-tight">
                     SEO Intelligence Assistant
                   </h3>
                   <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                    <span className="text-[11px] text-emerald-100">
+                    <motion.span
+                      className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#00CC99" }}
+                    />
+                    <span className="text-[11px] text-white/80">
                       Powered by AI &middot; Ask anything
                     </span>
                   </div>
@@ -387,7 +404,7 @@ export function SeoChatbot() {
               </div>
             </div>
 
-            {/* Messages - using plain div with overflow-y-auto for reliable scrolling */}
+            {/* Messages */}
             <div
               ref={scrollContainerRef}
               className="flex-1 overflow-y-auto px-4 py-3"
@@ -395,34 +412,43 @@ export function SeoChatbot() {
             >
               <div className="space-y-4">
                 {messages.map((msg, i) => (
-                  <MessageBubble key={i} message={msg} />
+                  <MessageBubble key={i} message={msg} index={i} />
                 ))}
 
                 {isLoading && <TypingDots />}
 
-                {/* Invisible anchor for scroll-to-bottom */}
                 <div ref={messagesEndRef} />
               </div>
             </div>
 
             {/* Quick Questions */}
             {messages.length <= 1 && !isLoading && (
-              <div className="px-4 pb-2 shrink-0">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="px-4 pb-2 shrink-0"
+              >
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-2">
                   Quick questions
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {QUICK_QUESTIONS.map((q) => (
-                    <button
+                  {QUICK_QUESTIONS.map((q, i) => (
+                    <motion.button
                       key={q}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.4 + i * 0.05 }}
+                      whileHover={{ scale: 1.03, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => sendMessage(q)}
                       className="text-[11px] bg-muted hover:bg-muted/80 text-foreground px-2.5 py-1.5 rounded-full border border-border/50 transition-colors text-left leading-tight"
                     >
                       {q}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Input */}
@@ -437,21 +463,25 @@ export function SeoChatbot() {
                 onKeyDown={handleKeyDown}
                 placeholder="Ask anything about SEO..."
                 disabled={isLoading}
-                className="h-9 text-sm border-0 bg-muted focus-visible:ring-1 focus-visible:ring-emerald-500/50 rounded-full px-4"
+                className="h-9 text-sm border-0 bg-muted focus-visible:ring-1 rounded-full px-4 transition-all duration-200"
+                style={{ '--tw-ring-color': '#00A99D50' } as React.CSSProperties}
               />
-              <Button
-                type="submit"
-                size="icon"
-                disabled={!input.trim() || isLoading}
-                className="h-9 w-9 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shrink-0 disabled:opacity-40"
-                aria-label="Send message"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  type="submit"
+                  size="icon"
+                  disabled={!input.trim() || isLoading}
+                  className="h-9 w-9 rounded-full text-white shrink-0 disabled:opacity-40 transition-all duration-200 hover:shadow-lg"
+                  style={{ background: input.trim() ? "linear-gradient(135deg, #00A99D, #0066CC)" : undefined }}
+                  aria-label="Send message"
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </motion.div>
             </form>
           </motion.div>
         )}

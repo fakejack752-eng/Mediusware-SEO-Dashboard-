@@ -15,21 +15,43 @@ interface KpiCardProps {
   suffix?: string;
   className?: string;
   animated?: boolean;
-  accentColor?: "emerald" | "teal" | "amber" | "stone";
+  accentColor?: "teal" | "blue" | "green" | "amber" | "purple" | "stone";
 }
 
 const accentMap = {
-  emerald: "from-emerald-500/10 to-transparent group-hover:from-emerald-500/20",
   teal: "from-teal-500/10 to-transparent group-hover:from-teal-500/20",
+  blue: "from-blue-500/10 to-transparent group-hover:from-blue-500/20",
+  green: "from-emerald-500/10 to-transparent group-hover:from-emerald-500/20",
   amber: "from-amber-500/10 to-transparent group-hover:from-amber-500/20",
+  purple: "from-purple-500/10 to-transparent group-hover:from-purple-500/20",
   stone: "from-stone-500/10 to-transparent group-hover:from-stone-500/20",
 };
 
 const iconBgMap = {
-  emerald: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
   teal: "bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400",
+  blue: "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400",
+  green: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400",
   amber: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
+  purple: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400",
   stone: "bg-stone-50 text-stone-600 dark:bg-stone-800/40 dark:text-stone-400",
+};
+
+const iconHoverMap = {
+  teal: "group-hover:shadow-teal-500/20 group-hover:shadow-lg",
+  blue: "group-hover:shadow-blue-500/20 group-hover:shadow-lg",
+  green: "group-hover:shadow-emerald-500/20 group-hover:shadow-lg",
+  amber: "group-hover:shadow-amber-500/20 group-hover:shadow-lg",
+  purple: "group-hover:shadow-purple-500/20 group-hover:shadow-lg",
+  stone: "group-hover:shadow-stone-500/20 group-hover:shadow-lg",
+};
+
+const borderAccentMap = {
+  teal: "group-hover:border-teal-500/30",
+  blue: "group-hover:border-blue-500/30",
+  green: "group-hover:border-emerald-500/30",
+  amber: "group-hover:border-amber-500/30",
+  purple: "group-hover:border-purple-500/30",
+  stone: "group-hover:border-stone-500/30",
 };
 
 export function KpiCard({
@@ -42,7 +64,7 @@ export function KpiCard({
   suffix,
   className,
   animated = true,
-  accentColor = "emerald",
+  accentColor = "teal",
 }: KpiCardProps) {
   const isPositive = change !== undefined && change > 0;
   const isNegative = change !== undefined && change < 0;
@@ -54,9 +76,14 @@ export function KpiCard({
 
   return (
     <motion.div
-      whileHover={{ y: -2, scale: 1.01 }}
+      whileHover={{ y: -4, scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={cn("group relative rounded-xl border bg-card p-4 overflow-hidden", className)}
+      className={cn(
+        "group relative rounded-xl border bg-card p-4 overflow-hidden cursor-default transition-colors duration-300",
+        borderAccentMap[accentColor],
+        className
+      )}
     >
       {/* Subtle gradient background on hover */}
       <div className={cn(
@@ -64,13 +91,30 @@ export function KpiCard({
         accentMap[accentColor]
       )} />
 
+      {/* Animated corner glow on hover */}
+      <motion.div
+        className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-2xl"
+        style={{
+          background: accentColor === "teal" ? "#00A99D15" :
+                     accentColor === "blue" ? "#0066CC15" :
+                     accentColor === "green" ? "#00CC9915" :
+                     accentColor === "purple" ? "#CC66CC15" :
+                     "#d9770615"
+        }}
+      />
+
       <div className="relative">
         <div className="flex items-center justify-between mb-3">
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest">{title}</p>
           {Icon && (
             <motion.div
-              whileHover={{ rotate: 8, scale: 1.1 }}
-              className={cn("h-8 w-8 rounded-lg flex items-center justify-center transition-colors", iconBgMap[accentColor])}
+              whileHover={{ rotate: 12, scale: 1.15 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className={cn(
+                "h-8 w-8 rounded-lg flex items-center justify-center transition-all duration-300",
+                iconBgMap[accentColor],
+                iconHoverMap[accentColor]
+              )}
             >
               <Icon className="h-4 w-4" />
             </motion.div>
@@ -80,9 +124,9 @@ export function KpiCard({
           {prefix && <span className="text-xs text-muted-foreground">{prefix}</span>}
           <motion.p
             className="text-2xl font-bold tabular-nums tracking-tight"
-            initial={animated ? { opacity: 0, y: 8 } : false}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
+            initial={animated ? { opacity: 0, y: 12, scale: 0.9 } : false}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
             {displayValue}
           </motion.p>
@@ -90,26 +134,40 @@ export function KpiCard({
         </div>
         {change !== undefined && (
           <motion.div
-            className="flex items-center gap-1.5 mt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            className="flex items-center gap-1.5 mt-2.5"
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
             {isPositive && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}>
-                <TrendingUp className="h-3 w-3 text-emerald-600" />
+              <motion.div
+                initial={{ scale: 0, rotate: -45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
+                className="h-5 w-5 rounded-full bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center"
+              >
+                <TrendingUp className="h-3 w-3 text-teal-600 dark:text-teal-400" />
               </motion.div>
             )}
             {isNegative && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}>
+              <motion.div
+                initial={{ scale: 0, rotate: 45 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 400, damping: 15 }}
+                className="h-5 w-5 rounded-full bg-red-50 dark:bg-red-950/40 flex items-center justify-center"
+              >
                 <TrendingDown className="h-3 w-3 text-red-500" />
               </motion.div>
             )}
-            {isNeutral && <Minus className="h-3 w-3 text-muted-foreground" />}
+            {isNeutral && (
+              <div className="h-5 w-5 rounded-full bg-stone-100 dark:bg-stone-800/40 flex items-center justify-center">
+                <Minus className="h-3 w-3 text-stone-400" />
+              </div>
+            )}
             <span
               className={cn(
-                "text-[11px] font-semibold tabular-nums",
-                isPositive && "text-emerald-600",
+                "text-[11px] font-bold tabular-nums",
+                isPositive && "text-teal-600 dark:text-teal-400",
                 isNegative && "text-red-500",
                 isNeutral && "text-muted-foreground"
               )}

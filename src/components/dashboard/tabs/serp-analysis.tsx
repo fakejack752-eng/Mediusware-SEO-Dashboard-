@@ -21,7 +21,6 @@ import {
   EmptyState,
   LoadingSkeleton,
   COLORS,
-  EMERALD,
   countBy,
   avgNum,
   fadeInUp,
@@ -83,11 +82,11 @@ export function SerpAnalysisTab() {
   );
 
   const rankConfig: ChartConfig = {
-    value: { label: "Count", color: EMERALD },
+    value: { label: "Count", color: "#00A99D" },
   };
 
   const typeConfig: ChartConfig = {
-    value: { label: "Count", color: "#0d9488" },
+    value: { label: "Count", color: "#00A99D" },
   };
 
   if (loading) return <LoadingSkeleton />;
@@ -107,7 +106,7 @@ export function SerpAnalysisTab() {
             title="Total Tracked"
             value={kpis.total}
             icon={Eye}
-            accentColor="emerald"
+            accentColor="teal"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={1}>
@@ -115,7 +114,7 @@ export function SerpAnalysisTab() {
             title="Avg Rank"
             value={kpis.avgRank}
             icon={BarChart3}
-            accentColor="teal"
+            accentColor="blue"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={2}>
@@ -124,7 +123,7 @@ export function SerpAnalysisTab() {
             value={kpis.featuredPct}
             suffix="%"
             icon={CheckCircle}
-            accentColor="amber"
+            accentColor="green"
           />
         </motion.div>
         <motion.div variants={fadeInUp} custom={3}>
@@ -132,7 +131,7 @@ export function SerpAnalysisTab() {
             title="Opportunities"
             value={kpis.opportunities}
             icon={TrendingUp}
-            accentColor="stone"
+            accentColor="amber"
           />
         </motion.div>
       </div>

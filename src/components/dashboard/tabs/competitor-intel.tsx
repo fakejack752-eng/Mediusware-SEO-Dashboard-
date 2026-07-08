@@ -60,7 +60,7 @@ export function CompetitorIntelTab() {
   const last10 = useMemo(() => [...data].reverse().slice(0, 10), [data]);
 
   const trafficConfig: ChartConfig = {
-    traffic: { label: "Est. Traffic", color: "#0d9488" },
+    traffic: { label: "Est. Traffic", color: "#00A99D" },
   };
 
   const typeConfig: ChartConfig = Object.fromEntries(
@@ -83,25 +83,25 @@ export function CompetitorIntelTab() {
           title="Total Entries"
           value={kpis.total}
           icon={Users}
-          accentColor="emerald"
+          accentColor="teal"
         />
         <KpiCard
           title="Unique Competitors"
           value={kpis.uniqueCompetitors}
           icon={Users}
-          accentColor="teal"
+          accentColor="blue"
         />
         <KpiCard
           title="Avg DA"
           value={kpis.avgDa}
           icon={Shield}
-          accentColor="amber"
+          accentColor="green"
         />
         <KpiCard
           title="Total Est. Traffic"
           value={kpis.totalTraffic.toLocaleString()}
           icon={Globe}
-          accentColor="stone"
+          accentColor="amber"
         />
       </motion.div>
 

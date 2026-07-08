@@ -64,7 +64,7 @@ function formatCellValue(value: unknown, field: FieldConfig): string {
 function getBadgeVariant(field: FieldConfig, value: string): { className: string; text: string } | null {
   if (field.type === "boolean") {
     return {
-      className: value === "Yes" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" : "bg-stone-100 text-stone-500 dark:bg-stone-800/40 dark:text-stone-400 border-stone-200 dark:border-stone-700",
+      className: value === "Yes" ? "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400 border-teal-200 dark:border-teal-800" : "bg-stone-100 text-stone-500 dark:bg-stone-800/40 dark:text-stone-400 border-stone-200 dark:border-stone-700",
       text: value,
     };
   }

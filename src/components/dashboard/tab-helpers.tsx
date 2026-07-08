@@ -2,22 +2,30 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, useInView, useSpring, useMotionValue, useTransform, type Variants } from "framer-motion";
-import { Database, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// ── Color Palette ───────────────────────────────────────
-export const COLORS = ["#059669", "#0d9488", "#d97706", "#dc2626", "#78716c", "#ea580c", "#16a34a", "#14b8a6"];
-export const EMBER = "#d97706";
-export const TEAL = "#0d9488";
-export const EMERALD = "#059669";
+// ── Brand Color Palette ─────────────────────────────────
+export const BRAND_TEAL = "#00A99D";
+export const BRAND_BLUE = "#0066CC";
+export const BRAND_GREEN = "#00CC99";
+export const BRAND_PURPLE = "#CC66CC";
+export const BRAND_TEAL_LIGHT = "#00C4B7";
+export const BRAND_TEAL_DARK = "#008F85";
 
-// ── Animation Variants ──────────────────────────────────
+export const COLORS = [BRAND_TEAL, BRAND_BLUE, BRAND_GREEN, "#d97706", "#dc2626", "#78716c", BRAND_PURPLE, BRAND_TEAL_LIGHT];
+export const EMBER = "#d97706";
+export const TEAL = BRAND_TEAL;
+export const EMERALD = BRAND_GREEN;
+
+// ── Animation Variants (Enhanced) ───────────────────────
 export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 16 },
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
   visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+    scale: 1,
+    transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
@@ -25,37 +33,58 @@ export const fadeIn: Variants = {
   hidden: { opacity: 0 },
   visible: (i: number = 0) => ({
     opacity: 1,
-    transition: { delay: i * 0.05, duration: 0.35 },
+    transition: { delay: i * 0.05, duration: 0.4 },
   }),
 };
 
 export const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 0, scale: 0.85, y: 12 },
   visible: (i: number = 0) => ({
     opacity: 1,
     scale: 1,
-    transition: { delay: i * 0.07, duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
 export const slideInLeft: Variants = {
-  hidden: { opacity: 0, x: -20 },
+  hidden: { opacity: 0, x: -30 },
   visible: (i: number = 0) => ({
     opacity: 1,
     x: 0,
-    transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" },
+    transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
+
+export const slideInRight: Variants = {
+  hidden: { opacity: 0, x: 30 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    x: 0,
+    transition: { delay: i * 0.07, duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
 export const staggerContainer: Variants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
 
+// Bouncy card entrance
+export const cardPopIn: Variants = {
+  hidden: { opacity: 0, scale: 0.9, y: 20 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { delay: i * 0.09, duration: 0.5, ease: [0.34, 1.56, 0.64, 1] },
+  }),
+};
+
 // ── Animated Number Counter ─────────────────────────────
-export function useAnimatedCounter(target: number, duration: number = 800) {
+export function useAnimatedCounter(target: number, duration: number = 900) {
   const [value, setValue] = useState(0);
   const prevTarget = useRef(target);
 
@@ -177,24 +206,43 @@ export function pctOf(arr: Record<string, unknown>[], key: string, match: (v: un
 export function EmptyState({ moduleName }: { moduleName: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0.96 }}
+      initial={{ opacity: 0, y: 30, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="flex flex-col items-center justify-center py-24 text-center"
     >
       <motion.div
-        initial={{ scale: 0, rotate: -10 }}
+        initial={{ scale: 0, rotate: -15 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 20 }}
-        className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 flex items-center justify-center mb-5"
+        transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 15 }}
+        className="relative h-20 w-20 rounded-2xl flex items-center justify-center mb-6"
+        style={{ background: `linear-gradient(135deg, ${BRAND_TEAL}15, ${BRAND_BLUE}10)` }}
       >
-        <Sparkles className="h-7 w-7 text-emerald-500" />
+        <Sparkles className="h-8 w-8" style={{ color: BRAND_TEAL }} />
+        <motion.div
+          className="absolute inset-0 rounded-2xl border-2"
+          style={{ borderColor: `${BRAND_TEAL}30` }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        />
       </motion.div>
-      <h3 className="text-lg font-semibold mb-1.5 tracking-tight">No data yet</h3>
-      <p className="text-sm text-muted-foreground max-w-sm leading-relaxed">
+      <motion.h3
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.4 }}
+        className="text-lg font-semibold mb-2 tracking-tight"
+      >
+        No data yet
+      </motion.h3>
+      <motion.p
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45, duration: 0.4 }}
+        className="text-sm text-muted-foreground max-w-sm leading-relaxed"
+      >
         Switch to the <span className="font-medium text-foreground">Admin Panel</span> and add records to the{" "}
-        <span className="font-medium text-foreground">{moduleName}</span> module to see visualizations here.
-      </p>
+        <span className="font-medium" style={{ color: BRAND_TEAL }}>{moduleName}</span> module to see visualizations here.
+      </motion.p>
     </motion.div>
   );
 }
@@ -204,27 +252,40 @@ export function LoadingSkeleton() {
     <div className="space-y-6 p-4 sm:p-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1, duration: 0.4 }}
+          >
+            <Skeleton className="h-28 rounded-xl" />
+          </motion.div>
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Skeleton className="h-72 rounded-xl" />
-        <Skeleton className="h-72 rounded-xl" />
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.4 }}>
+          <Skeleton className="h-72 rounded-xl" />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.4 }}>
+          <Skeleton className="h-72 rounded-xl" />
+        </motion.div>
       </div>
-      <Skeleton className="h-[400px] rounded-xl" />
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.4 }}>
+        <Skeleton className="h-[400px] rounded-xl" />
+      </motion.div>
     </div>
   );
 }
 
-// ── Animated Card Wrapper ───────────────────────────────
+// ── Animated Card Wrapper (Enhanced) ────────────────────
 export function AnimatedCard({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   const { ref, isInView } = useInViewOnce();
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      initial={{ opacity: 0, y: 28, scale: 0.96 }}
       animate={isInView ? { opacity: 1, y: 0, scale: 1 } : {}}
-      transition={{ delay, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className={className}
     >
       {children}
@@ -232,13 +293,13 @@ export function AnimatedCard({ children, delay = 0, className = "" }: { children
   );
 }
 
-// ── Animated Table Row ──────────────────────────────────
+// ── Animated Table Row (Enhanced) ───────────────────────
 export function AnimatedRow({ children, index = 0 }: { children: React.ReactNode; index?: number }) {
   return (
     <motion.tr
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
+      initial={{ opacity: 0, x: -12, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ delay: index * 0.05, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className="border-b transition-colors hover:bg-muted/50 group"
     >
       {children}
@@ -249,17 +310,17 @@ export function AnimatedRow({ children, index = 0 }: { children: React.ReactNode
 // ── Status Badge Colors ─────────────────────────────────
 export function getStatusColor(status: string): string {
   const map: Record<string, string> = {
-    "Published": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-    "Approved": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-    "Ranking": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-    "Top 10": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+    "Published": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
+    "Approved": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
+    "Ranking": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
+    "Top 10": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
     "Top 3": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
     "Improving": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
     "Positive": "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+    "Rising": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
     "In Progress": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "In Review": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "Assigned": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
-    "Rising": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "Spike": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "Mixed": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "Neutral": "bg-stone-100 text-stone-600 dark:bg-stone-800/40 dark:text-stone-400",
@@ -281,10 +342,10 @@ export function getStatusColor(status: string): string {
 export function getPriorityColor(priority: string): string {
   const map: Record<string, string> = {
     "Critical": "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
+    "Very High": "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
     "High": "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
     "Medium": "bg-teal-100 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400",
     "Low": "bg-stone-100 text-stone-500 dark:bg-stone-800/40 dark:text-stone-500",
-    "Very High": "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400",
     "Very Low": "bg-stone-100 text-stone-500 dark:bg-stone-800/40 dark:text-stone-500",
   };
   return map[priority] || "bg-muted text-muted-foreground";

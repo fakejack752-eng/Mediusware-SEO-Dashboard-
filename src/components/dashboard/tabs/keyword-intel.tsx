@@ -43,13 +43,13 @@ export function KeywordIntelTab() {
   );
 
   const scatterConfig: ChartConfig = {
-    volume: { label: "Volume", color: "#059669" },
+    volume: { label: "Volume", color: "#00A99D" },
     kd: { label: "KD", color: "#d97706" },
-    priorityScore: { label: "Priority", color: "#059669" },
+    priorityScore: { label: "Priority", color: "#00A99D" },
   };
 
   const intentConfig: ChartConfig = {
-    value: { label: "Count", color: "#0d9488" },
+    value: { label: "Count", color: "#00A99D" },
   };
 
   if (loading) return <LoadingSkeleton />;
@@ -60,16 +60,16 @@ export function KeywordIntelTab() {
       {/* ── KPI Grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <motion.div variants={fadeInUp} custom={0}>
-          <KpiCard title="Total Keywords" value={kpis.total} icon={Search} accentColor="emerald" />
+          <KpiCard title="Total Keywords" value={kpis.total} icon={Search} accentColor="teal" />
         </motion.div>
         <motion.div variants={fadeInUp} custom={1}>
-          <KpiCard title="Avg Volume" value={kpis.avgVolume.toLocaleString()} icon={TrendingUp} accentColor="teal" />
+          <KpiCard title="Avg Volume" value={kpis.avgVolume.toLocaleString()} icon={TrendingUp} accentColor="blue" />
         </motion.div>
         <motion.div variants={fadeInUp} custom={2}>
-          <KpiCard title="Avg KD" value={kpis.avgKd} icon={Target} accentColor="amber" />
+          <KpiCard title="Avg KD" value={kpis.avgKd} icon={Target} accentColor="green" />
         </motion.div>
         <motion.div variants={fadeInUp} custom={3}>
-          <KpiCard title="High Priority" value={kpis.highPriority} icon={ArrowUpCircle} accentColor="stone" />
+          <KpiCard title="High Priority" value={kpis.highPriority} icon={ArrowUpCircle} accentColor="amber" />
         </motion.div>
       </div>
 
@@ -87,7 +87,7 @@ export function KeywordIntelTab() {
                   <YAxis type="number" dataKey="y" name="KD" tick={{ fontSize: 11 }} />
                   <ZAxis type="number" dataKey="z" range={[40, 400]} />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Scatter data={scatterData} fill="#059669" />
+                  <Scatter data={scatterData} fill="#00A99D" />
                 </ScatterChart>
               </ChartContainer>
             </CardContent>
