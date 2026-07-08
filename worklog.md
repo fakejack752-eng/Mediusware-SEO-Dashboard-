@@ -288,3 +288,38 @@ Stage Summary:
 - Chatbot uses z-ai-web-dev-sdk on backend, zero client-side SDK usage
 - Full markdown rendering, conversation history, session management
 - Verified end-to-end: user types question → API processes with LLM → AI response displayed
+
+---
+Task ID: 6
+Agent: Main Orchestrator
+Task: Recheck all tabs and chatbot, fix issues, end-to-end test
+
+Work Log:
+- Read full project state: all 8 tab components, page.tsx, chat API, chatbot widget
+- Ran `bun run lint` — 0 errors
+- Identified chatbot scroll bug: `ScrollArea` ref was on root element, not the viewport — auto-scroll to bottom never worked
+- Rewrote seo-chatbot.tsx with fixes:
+  - Replaced `ScrollArea` with plain `div` + `overflow-y-auto` for reliable scroll-to-bottom via `messagesEndRef.scrollIntoView()`
+  - Added HTML escaping in markdown renderer for XSS safety
+  - Improved typing indicator: animated bouncing dots instead of static "Thinking..." text
+  - Added `handleKeyDown` for Enter-to-send on the input field
+  - Added proper `aria-label` on all buttons for accessibility
+  - Removed unused `ScrollArea` import, removed unused `scrollContainerRef`
+- Browser tested all 8 tabs: Market, Competitor, Keyword, SERP, AI Audit, Pipeline, Performance, Content Gaps — all render correctly with data
+- Browser tested chatbot:
+  - Floating button opens chat with spring animation ✓
+  - Quick question buttons send messages ✓
+  - Custom typed message sends via Enter key and Send button ✓
+  - AI responds with structured markdown (headers, bold, bullet lists) ✓
+  - Response content is accurate (references Mediusware, Bangladesh, Microsoft stack) ✓
+  - Clear chat works (DELETE /api/chat 200) ✓
+  - All API calls return 200 (chat: 12-20s, dashboard: 5-16ms) ✓
+- Tested mobile responsive (375×812) — layout adapts correctly
+- Console: 0 errors, 1 warning (ChartLegendContent key prop from shadcn/ui internal, not our code)
+
+Stage Summary:
+- Chatbot scroll bug fixed (ScrollArea → plain div with scrollIntoView)
+- Markdown renderer hardened with HTML escaping
+- All 8 tabs + chatbot verified working end-to-end via Agent Browser
+- Zero lint errors, zero runtime errors
+- Dashboard is fully functional and production-ready

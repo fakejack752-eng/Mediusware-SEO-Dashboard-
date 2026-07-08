@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   MessageSquare,
@@ -31,28 +30,63 @@ const QUICK_QUESTIONS = [
   "Suggest SEO topics for Mediusware",
 ];
 
-function formatMarkdown(text: string) {
-  // Simple markdown rendering: bold, italic, bullet lists, numbered lists, headers, code blocks
+function renderMarkdown(text: string): string {
+  // Escape HTML first for safety
   let html = text
-    // Code blocks
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-muted rounded-md p-3 my-2 overflow-x-auto text-xs font-mono"><code>$2</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">$1</code>')
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3 class="font-semibold text-sm mt-3 mb-1">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="font-semibold text-base mt-3 mb-1">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="font-bold text-lg mt-3 mb-1">$1</h1>')
-    // Bold
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    // Italic
-    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
-    // Bullet lists
-    .replace(/^[\-\*] (.+)$/gm, '<li class="ml-4 list-disc text-sm">$1</li>')
-    // Numbered lists
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-sm">$1</li>')
-    // Line breaks
-    .replace(/\n\n/g, "</p><p class='mt-2'>")
-    .replace(/\n/g, "<br/>");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Code blocks (```lang\n...\n```)
+  html = html.replace(
+    /```(\w*)\n([\s\S]*?)```/g,
+    (_match, _lang, code) =>
+      `<pre class="bg-muted rounded-md p-3 my-2 overflow-x-auto text-xs font-mono whitespace-pre-wrap"><code>${code.trim()}</code></pre>`
+  );
+
+  // Inline code (`...`)
+  html = html.replace(
+    /`([^`]+)`/g,
+    '<code class="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">$1</code>'
+  );
+
+  // Headers (must be before bold/italic)
+  html = html.replace(
+    /^### (.+)$/gm,
+    '<h3 class="font-semibold text-sm mt-3 mb-1">$1</h3>'
+  );
+  html = html.replace(
+    /^## (.+)$/gm,
+    '<h2 class="font-semibold text-base mt-3 mb-1">$1</h2>'
+  );
+  html = html.replace(
+    /^# (.+)$/gm,
+    '<h1 class="font-bold text-lg mt-3 mb-1">$1</h1>'
+  );
+
+  // Bold (**...**)
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+  // Italic (*...*)
+  html = html.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+
+  // Bullet lists (- or * at start of line)
+  html = html.replace(
+    /^[\-\*] (.+)$/gm,
+    '<li class="ml-4 list-disc text-sm">$1</li>'
+  );
+
+  // Numbered lists (1. 2. 3. at start of line)
+  html = html.replace(
+    /^\d+\. (.+)$/gm,
+    '<li class="ml-4 list-decimal text-sm">$1</li>'
+  );
+
+  // Paragraphs: double newline → paragraph break
+  html = html.replace(/\n\n/g, '</p><p class="mt-2">');
+
+  // Single newline → <br/>
+  html = html.replace(/\n/g, "<br/>");
 
   return `<p>${html}</p>`;
 }
@@ -93,7 +127,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         ) : (
           <div
             className="prose prose-xs max-w-none [&_h1]:text-base [&_h2]:text-sm [&_h3]:text-xs [&_li]:my-0.5 [&_p]:my-0 [&_strong]:font-semibold [&_pre]:whitespace-pre-wrap"
-            dangerouslySetInnerHTML={{ __html: formatMarkdown(message.content) }}
+            dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
           />
         )}
         <p
@@ -102,8 +136,44 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             isUser ? "text-primary-foreground/60" : "text-muted-foreground"
           )}
         >
-          {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          {message.timestamp.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function TypingDots() {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex gap-2.5"
+    >
+      <Avatar className="h-7 w-7 shrink-0 mt-0.5">
+        <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+          M
+        </AvatarFallback>
+      </Avatar>
+      <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
+        <div className="flex items-center gap-1">
+          {[0, 1, 2].map((i) => (
+            <motion.span
+              key={i}
+              className="h-2 w-2 rounded-full bg-muted-foreground/40"
+              animate={{ y: [0, -4, 0] }}
+              transition={{
+                duration: 0.6,
+                repeat: Infinity,
+                delay: i * 0.15,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </div>
       </div>
     </motion.div>
   );
@@ -123,15 +193,14 @@ export function SeoChatbot() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `session-${Date.now()}`);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isLoading]);
 
   // Focus input when chat opens
   useEffect(() => {
@@ -163,7 +232,7 @@ export function SeoChatbot() {
 
         const data = await res.json();
 
-        if (data.success) {
+        if (data.success && data.response) {
           setMessages((prev) => [
             ...prev,
             {
@@ -187,7 +256,8 @@ export function SeoChatbot() {
           ...prev,
           {
             role: "assistant",
-            content: "Network error — please check your connection and try again.",
+            content:
+              "Network error \u2014 please check your connection and try again.",
             timestamp: new Date(),
           },
         ]);
@@ -201,6 +271,13 @@ export function SeoChatbot() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     sendMessage(input);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage(input);
+    }
   };
 
   const handleClear = async () => {
@@ -269,7 +346,7 @@ export function SeoChatbot() {
                   <div className="flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 animate-pulse" />
                     <span className="text-[11px] text-emerald-100">
-                      Powered by AI · Ask anything
+                      Powered by AI &middot; Ask anything
                     </span>
                   </div>
                 </div>
@@ -280,6 +357,7 @@ export function SeoChatbot() {
                   size="icon"
                   className="h-7 w-7 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={() => setIsExpanded(!isExpanded)}
+                  aria-label={isExpanded ? "Minimize" : "Maximize"}
                 >
                   {isExpanded ? (
                     <Minimize2 className="h-3.5 w-3.5" />
@@ -293,6 +371,7 @@ export function SeoChatbot() {
                   className="h-7 w-7 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={handleClear}
                   title="Clear chat"
+                  aria-label="Clear chat"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -301,42 +380,30 @@ export function SeoChatbot() {
                   size="icon"
                   className="h-7 w-7 text-white/80 hover:text-white hover:bg-white/10"
                   onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Messages */}
-            <ScrollArea className="flex-1 px-4 py-3" ref={scrollRef}>
+            {/* Messages - using plain div with overflow-y-auto for reliable scrolling */}
+            <div
+              ref={scrollContainerRef}
+              className="flex-1 overflow-y-auto px-4 py-3"
+              style={{ scrollbarWidth: "thin", scrollbarColor: "hsl(var(--border)) transparent" }}
+            >
               <div className="space-y-4">
                 {messages.map((msg, i) => (
                   <MessageBubble key={i} message={msg} />
                 ))}
 
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex gap-2.5"
-                  >
-                    <Avatar className="h-7 w-7 shrink-0 mt-0.5">
-                      <AvatarFallback className="text-[10px] font-bold bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-                        M
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-muted rounded-2xl rounded-tl-md px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">
-                          Thinking...
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
+                {isLoading && <TypingDots />}
+
+                {/* Invisible anchor for scroll-to-bottom */}
+                <div ref={messagesEndRef} />
               </div>
-            </ScrollArea>
+            </div>
 
             {/* Quick Questions */}
             {messages.length <= 1 && !isLoading && (
@@ -367,6 +434,7 @@ export function SeoChatbot() {
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Ask anything about SEO..."
                 disabled={isLoading}
                 className="h-9 text-sm border-0 bg-muted focus-visible:ring-1 focus-visible:ring-emerald-500/50 rounded-full px-4"
@@ -376,6 +444,7 @@ export function SeoChatbot() {
                 size="icon"
                 disabled={!input.trim() || isLoading}
                 className="h-9 w-9 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shrink-0 disabled:opacity-40"
+                aria-label="Send message"
               >
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
